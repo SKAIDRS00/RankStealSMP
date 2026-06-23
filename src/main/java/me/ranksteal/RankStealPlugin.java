@@ -1,102 +1,87 @@
 package me.ranksteal;
 
 import org.bukkit.Bukkit;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
-import java.sql.*;
+import java.util.HashMap;
 import java.util.UUID;
 
 public class RankStealPlugin extends JavaPlugin implements Listener {
 
-    private Connection conn;
+    private final HashMap<UUID, Integer> ranks = new HashMap<>();
 
     @Override
     public void onEnable() {
         Bukkit.getPluginManager().registerEvents(this, this);
-        setupDB();
         getLogger().info("RankStealSMP Enabled");
     }
 
-    private void setupDB() {
-        try {
-            if (!getDataFolder().exists()) getDataFolder().mkdirs();
-
-            File dbFile = new File(getDataFolder(), "ranks.db");
-            conn = DriverManager.getConnection("jdbc:sqlite:" + dbFile);
-
-            Statement st = conn.createStatement();
-            st.execute(
-                "CREATE TABLE IF NOT EXISTS ranks (" +
-                "uuid TEXT PRIMARY KEY," +
-                "rank INTEGER" +
-                ")"
-            );
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     private int getRank(UUID uuid) {
-        try {
-            PreparedStatement ps = conn.prepareStatement(
-                "SELECT rank FROM ranks WHERE uuid=?"
-            );
-            ps.setString(1, uuid.toString());
-
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) return rs.getInt("rank");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return -1;
+        return ranks.getOrDefault(uuid, 1);
     }
 
     private void setRank(UUID uuid, int rank) {
-        try {
-            PreparedStatement ps = conn.prepareStatement(
-                "INSERT INTO ranks(uuid, rank) VALUES(?, ?) " +
-                "ON CONFLICT(uuid) DO UPDATE SET rank=?"
-            );
+        ranks.put(uuid, rank);
+    }
 
-            ps.setString(1, uuid.toString());
-            ps.setInt(2, rank);
-            ps.setInt(3, rank);
+    @Override
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 
-            ps.executeUpdate();
+        // /rank
+        if (cmd.getName().equalsIgnoreCase("rank")) {
 
-        } catch (Exception e) {
-            e.printStackTrace();
+            if (args.length == 0) {
+                if (!(sender instanceof Player p)) return true;
+                p.sendMessage("Your Rank: " + getRank(p.getUniqueId()));
+                return true;
+            }
+
+            Player target = Bukkit.getPlayer(args[0]);
+            if (target == null) {
+                sender.sendMessage("Player not found");
+                return true;
+            }
+
+            sender.sendMessage(target.getName() + " Rank: " + getRank(target.getUniqueId()));
+            return true;
         }
-    }
 
-    private void swap(UUID k, UUID v) {
-        int kr = getRank(k);
-        int vr = getRank(v);
+        // /setrank
+        if (cmd.getName().equalsIgnoreCase("setrank")) {
 
-        if (kr == -1 || vr == -1) return;
+            if (!sender.hasPermission("ranksteal.admin")) {
+                sender.sendMessage("No permission");
+                return true;
+            }
 
-        setRank(k, vr);
-        setRank(v, kr);
-    }
+            if (args.length != 2) {
+                sender.sendMessage("/setrank <player> <rank>");
+                return true;
+            }
 
-    @EventHandler
-    public void onDeath(PlayerDeathEvent e) {
-        Player v = e.getEntity();
-        Player k = v.getKiller();
+            Player target = Bukkit.getPlayer(args[0]);
+            if (target == null) {
+                sender.sendMessage("Player not found");
+                return true;
+            }
 
-        if (k == null) return;
+            int rank;
+            try {
+                rank = Integer.parseInt(args[1]);
+            } catch (Exception e) {
+                sender.sendMessage("Invalid number");
+                return true;
+            }
 
-        swap(k.getUniqueId(), v.getUniqueId());
+            setRank(target.getUniqueId(), rank);
+            sender.sendMessage("Rank set!");
+            return true;
+        }
 
-        k.sendMessage("§aRank stolen!");
-        v.sendMessage("§cRank lost!");
+        return false;
     }
 }
