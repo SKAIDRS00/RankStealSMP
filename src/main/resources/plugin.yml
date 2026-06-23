@@ -1,0 +1,4 @@
+name: RankStealSMP
+version: 1.0
+main: me.ranksteal.RankStealPlugin
+api-version: 1.21
