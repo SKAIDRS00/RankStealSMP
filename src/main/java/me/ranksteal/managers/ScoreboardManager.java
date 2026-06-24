@@ -36,11 +36,12 @@ public class ScoreboardManager {
         Scoreboard board = manager.getNewScoreboard();
         Objective obj = board.registerNewObjective("ranksteal", Criteria.DUMMY,
                 mm.deserialize(plugin.getConfig().getString("scoreboard.title",
-                        "<gradient:#FFD700:#FF4500><bold>✦ RANK STEAL SMP ✦</bold></gradient>")));
+                        "<gradient:#FFD700:#FF4500><bold>✦ CROWN ALLIES SMP ✦</bold></gradient>")));
         obj.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         boards.put(player.getUniqueId(), board);
         player.setScoreboard(board);
+
         update(player, obj);
     }
 
@@ -61,8 +62,6 @@ public class ScoreboardManager {
         setLine(obj,  7, " §§");
         setLine(obj,  6, "§e§lServer");
         setLine(obj,  5, "§f  Online: §a" + online);
-        setLine(obj,  4, " §§§");
-        setLine(obj,  3, "§7play.yourserver.net");
     }
 
     private void setLine(Objective obj, int score, String text) {
@@ -101,4 +100,3 @@ public class ScoreboardManager {
         startUpdater();
     }
 }
-
