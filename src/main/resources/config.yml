@@ -1,0 +1,60 @@
+# ╔══════════════════════════════════════╗
+# ║       RankStealSMP Configuration     ║
+# ╚══════════════════════════════════════╝
+
+database:
+  # SQLite database file name (in plugin folder)
+  file: ranksteal.db
+
+rank:
+  # Format for rank display (supports MiniMessage)
+  # Placeholders: {rank} {player}
+  prefix-format: "<gradient:#FFD700:#FFA500>[#{rank}]</gradient> "
+  top3-prefixes:
+    1: "<gradient:#FFD700:#FF8C00>☆ [#1]</gradient> "
+    2: "<gradient:#C0C0C0:#A9A9A9>☆ [#2]</gradient> "
+    3: "<gradient:#CD7F32:#8B4513>☆ [#3]</gradient> "
+
+scoreboard:
+  enabled: true
+  title: "<gradient:#FFD700:#FF4500><bold>✦ RANK STEAL SMP ✦</bold></gradient>"
+  update-interval: 20  # ticks (20 = 1 second)
+
+tab:
+  enabled: true
+  header: "\n<gradient:#FFD700:#FFA500><bold>✦ RankSteal SMP ✦</bold></gradient>\n"
+  footer: "\n<gray>Players Online: <white>{online}</white></gray>\n"
+
+actionbar:
+  enabled: true
+  # Shown after a kill
+  kill-message: "<gradient:#FF4500:#FFD700>⚔ You stole rank #{stolen_rank} from {victim}!</gradient>"
+
+sounds:
+  rank-steal:
+    enabled: true
+    sound: ENTITY_PLAYER_LEVELUP
+    volume: 1.0
+    pitch: 1.2
+  new-player:
+    enabled: true
+    sound: BLOCK_NOTE_BLOCK_PLING
+    volume: 1.0
+    pitch: 1.0
+
+messages:
+  prefix: "<gradient:#FFD700:#FFA500><bold>[RS]</bold></gradient> "
+  rank-info: "<yellow>Your rank: <white>#{rank}</white> | Kills: <white>{kills}</white> | Deaths: <white>{deaths}</white></yellow>"
+  rank-stolen-attacker: "<gradient:#FF4500:#FFD700>⚔ You stole <white>#{stolen_rank}</white> from <red>{victim}</red>! Your rank: <white>#{new_rank}</white></gradient>"
+  rank-stolen-victim: "<gradient:#FF0000:#FF6347>💀 <white>{killer}</white> stole your rank! You dropped to <white>#{new_rank}</white></gradient>"
+  new-player-join: "<gradient:#00FF88:#00BFFF>✦ {player} joined the SMP! Rank: <white>#{rank}</white></gradient>"
+  player-not-found: "<red>Player not found or never joined.</red>"
+  no-permission: "<red>You don't have permission to do that.</red>"
+  reload-success: "<green>✓ Config reloaded successfully.</green>"
+  setrank-success: "<green>✓ Set <white>{player}</white>'s rank to <white>#{rank}</white>.</green>"
+  setrank-invalid: "<red>Invalid rank number. Must be between 1 and {max}.</red>"
+  setrank-occupied: "<red>Rank #{rank} is already taken by {holder}.</red>"
+  topranks-header: "<gradient:#FFD700:#FFA500>━━━━━ TOP RANKS ━━━━━</gradient>"
+  topranks-entry: "<gray>{pos}. <white>{player}</white> → <yellow>#{rank}</yellow> <dark_gray>({kills} kills)</dark_gray></gray>"
+  topranks-footer: "<gray>━━━━━━━━━━━━━━━━━━━━</gray>"
+  topranks-page: "<gray>Page {page}/{max_page} | /topranks {next}</gray>"
