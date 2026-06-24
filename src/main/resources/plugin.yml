@@ -1,15 +1,46 @@
 name: RankStealSMP
-version: 1.0
+version: '${project.version}'
 main: me.ranksteal.RankStealPlugin
-api-version: 1.21
+api-version: '1.21'
+description: Premium rank-stealing SMP plugin
+authors: [ RankSteal ]
+website: https://github.com/ranksteal/RankStealSMP
+softdepend: [ PlaceholderAPI ]
 
 commands:
   rank:
-    description: Check rank
+    description: View your current rank
+    usage: /rank [player]
+    aliases: [ r ]
+  topranks:
+    description: View top ranked players
+    usage: /topranks [page]
+    aliases: [ top, leaderboard, lb ]
   setrank:
-    description: Set rank
-    permission: ranksteal.admin
+    description: Set a player's rank (Admin)
+    usage: /setrank <player> <rank>
+    permission: ranksteal.admin.setrank
+  rankreload:
+    description: Reload plugin configuration
+    usage: /rankreload
+    permission: ranksteal.admin.reload
 
 permissions:
   ranksteal.admin:
+    description: Full admin access
     default: op
+    children:
+      ranksteal.admin.setrank: true
+      ranksteal.admin.reload: true
+  ranksteal.admin.setrank:
+    description: Set any player's rank
+    default: op
+  ranksteal.admin.reload:
+    description: Reload plugin config
+    default: op
+  ranksteal.rank:
+    description: View rank info
+    default: true
+  ranksteal.topranks:
+    description: View leaderboard
+    default: true
