@@ -42,35 +42,37 @@ public class SetRankCommand implements CommandExecutor {
             return true;
         }
 
+        final int finalTargetRank = targetRank;
+
         plugin.getDatabaseManager().getTotalPlayers().thenAccept(total -> {
-            final int maxRank = total;
-            if (targetRank > maxRank + 1) {
+            if (finalTargetRank > total + 1) {
                 plugin.getServer().getScheduler().runTask(plugin, () ->
                         sender.sendMessage(mm.deserialize(
-                                plugin.getConfig().getString("messages.setrank-invalid", "<red>Invalid rank number. Must be between 1 and {max}.</red>")
-                                        .replace("{max}", String.valueOf(maxRank)))));
+                                plugin.getConfig().getString("messages.setrank-invalid",
+                                        "<red>Invalid rank. Must be between 1 and {max}.</red>")
+                                        .replace("{max}", String.valueOf(total)))));
                 return;
             }
 
-            plugin.getDatabaseManager().getPlayerByRank(targetRank).thenAccept(holder -> {
-                String tName = targetName;
-                Player online = Bukkit.getPlayerExact(tName);
+            plugin.getDatabaseManager().getPlayerByRank(finalTargetRank).thenAccept(holder -> {
+                Player online = Bukkit.getPlayerExact(targetName);
                 PlayerData targetData = online != null
                         ? plugin.getRankManager().getCached(online.getUniqueId())
                         : null;
 
                 if (targetData == null) {
-                    plugin.getDatabaseManager().getPlayerByName(tName).thenAccept(data -> {
+                    plugin.getDatabaseManager().getPlayerByName(targetName).thenAccept(data -> {
                         if (data == null) {
                             plugin.getServer().getScheduler().runTask(plugin, () ->
                                     sender.sendMessage(mm.deserialize(
-                                            plugin.getConfig().getString("messages.player-not-found", "<red>Player not found.</red>"))));
+                                            plugin.getConfig().getString("messages.player-not-found",
+                                                    "<red>Player not found.</red>"))));
                             return;
                         }
-                        applySetRank(sender, data, holder, targetRank);
+                        applySetRank(sender, data, holder, finalTargetRank);
                     });
                 } else {
-                    applySetRank(sender, targetData, holder, targetRank);
+                    applySetRank(sender, targetData, holder, finalTargetRank);
                 }
             });
         });
@@ -79,34 +81,47 @@ public class SetRankCommand implements CommandExecutor {
     }
 
     private void applySetRank(CommandSender sender, PlayerData target, PlayerData holder, int targetRank) {
+        int oldTargetRank = target.getRankNumber();
+
         if (holder != null && !holder.getUuid().equals(target.getUuid())) {
-            sender.sendMessage(mm.deserialize(
-                    plugin.getConfig().getString("messages.setrank-occupied",
-                            "<red>Rank #{rank} is already taken by {holder}.</red>")
-                            .replace("{rank}", String.valueOf(targetRank))
-                            .replace("{holder}", holder.getUsername())));
-            return;
-        }
+            holder.setRankNumber(oldTargetRank);
+            target.setRankNumber(targetRank);
 
-        int oldRank = target.getRankNumber();
-        target.setRankNumber(targetRank);
-        plugin.getRankManager().putCache(target);
+            plugin.getRankManager().putCache(target);
+            plugin.getRankManager().putCache(holder);
 
-        plugin.getDatabaseManager().savePlayerData(target).thenRun(() -> {
-            plugin.getServer().getScheduler().runTask(plugin, () -> {
-                String msg = plugin.getConfig().getString("messages.setrank-success",
-                        "<green>✓ Set <white>{player}</white>'s rank to <white>#{rank}</white>.</green>")
-                        .replace("{player}", target.getUsername())
-                        .replace("{rank}", String.valueOf(targetRank));
-                sender.sendMessage(mm.deserialize(msg));
-
-                Player targetOnline = Bukkit.getPlayer(target.getUuid());
-                if (targetOnline != null) {
-                    plugin.getTabManager().updatePlayer(targetOnline);
-                    plugin.getScoreboardManager().updateAll();
-                }
+            plugin.getDatabaseManager().swapRanks(target, holder).thenRun(() -> {
+                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    sender.sendMessage(mm.deserialize(
+                            "<green>✓ Swapped: <white>" + target.getUsername() +
+                            "</white> → <yellow>#" + targetRank + "</yellow>  |  <white>" +
+                            holder.getUsername() + "</white> → <yellow>#" + oldTargetRank + "</yellow></green>"));
+                    refreshOnlinePlayer(target);
+                    refreshOnlinePlayer(holder);
+                });
             });
-        });
+        } else {
+            target.setRankNumber(targetRank);
+            plugin.getRankManager().putCache(target);
+
+            plugin.getDatabaseManager().savePlayerData(target).thenRun(() -> {
+                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    sender.sendMessage(mm.deserialize(
+                            plugin.getConfig().getString("messages.setrank-success",
+                                    "<green>✓ Set <white>{player}</white>'s rank to <white>#{rank}</white>.</green>")
+                                    .replace("{player}", target.getUsername())
+                                    .replace("{rank}", String.valueOf(targetRank))));
+                    refreshOnlinePlayer(target);
+                });
+            });
+        }
+    }
+
+    private void refreshOnlinePlayer(PlayerData data) {
+        Player online = Bukkit.getPlayer(data.getUuid());
+        if (online != null) {
+            plugin.getTabManager().updatePlayer(online);
+            plugin.getScoreboardManager().show(online);
+        }
     }
 }
-
