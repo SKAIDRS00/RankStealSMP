@@ -1,92 +1,107 @@
 package me.ranksteal;
 
-import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
+import me.ranksteal.commands.RankCommand;
+import me.ranksteal.commands.RankReloadCommand;
+import me.ranksteal.commands.SetRankCommand;
+import me.ranksteal.commands.TopRanksCommand;
+import me.ranksteal.database.DatabaseManager;
+import me.ranksteal.listeners.PlayerDeathListener;
+import me.ranksteal.listeners.PlayerJoinListener;
+import me.ranksteal.listeners.PlayerQuitListener;
+import me.ranksteal.managers.RankManager;
+import me.ranksteal.managers.ScoreboardManager;
+import me.ranksteal.managers.TabManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.HashMap;
-import java.util.UUID;
+import java.util.Objects;
+import java.util.logging.Level;
 
-public class RankStealPlugin extends JavaPlugin implements Listener {
+public final class RankStealPlugin extends JavaPlugin {
 
-    private final HashMap<UUID, Integer> ranks = new HashMap<>();
+    private static RankStealPlugin instance;
+
+    private DatabaseManager databaseManager;
+    private RankManager rankManager;
+    private ScoreboardManager scoreboardManager;
+    private TabManager tabManager;
 
     @Override
     public void onEnable() {
-        Bukkit.getPluginManager().registerEvents(this, this);
-        getLogger().info("RankStealSMP Enabled");
-    }
+        instance = this;
 
-    private int getRank(UUID uuid) {
-        return ranks.getOrDefault(uuid, 1);
-    }
+        saveDefaultConfig();
 
-    private void setRank(UUID uuid, int rank) {
-        ranks.put(uuid, rank);
+        if (!initDatabase()) {
+            getLogger().severe("Failed to initialize database! Disabling plugin.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
+        rankManager = new RankManager(this, databaseManager);
+        scoreboardManager = new ScoreboardManager(this);
+        tabManager = new TabManager(this);
+
+        registerListeners();
+        registerCommands();
+
+        getLogger().info("RankStealSMP v" + getDescription().getVersion() + " enabled.");
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+    public void onDisable() {
+        if (scoreboardManager != null) scoreboardManager.removeAll();
+        if (databaseManager != null) databaseManager.close();
+        getLogger().info("RankStealSMP disabled.");
+    }
 
-        // /rank
-        if (cmd.getName().equalsIgnoreCase("rank")) {
-
-            if (args.length == 0) {
-                if (!(sender instanceof Player)) {
-                    sender.sendMessage("Only players can use this");
-                    return true;
-                }
-
-                Player p = (Player) sender;
-                p.sendMessage("Your Rank: " + getRank(p.getUniqueId()));
-                return true;
-            }
-
-            Player target = Bukkit.getPlayer(args[0]);
-            if (target == null) {
-                sender.sendMessage("Player not found");
-                return true;
-            }
-
-            sender.sendMessage(target.getName() + " Rank: " + getRank(target.getUniqueId()));
+    private boolean initDatabase() {
+        try {
+            databaseManager = new DatabaseManager(this);
+            databaseManager.init();
             return true;
+        } catch (Exception e) {
+            getLogger().log(Level.SEVERE, "Database initialization failed", e);
+            return false;
         }
+    }
 
-        // /setrank
-        if (cmd.getName().equalsIgnoreCase("setrank")) {
+    private void registerListeners() {
+        var pm = getServer().getPluginManager();
+        pm.registerEvents(new PlayerDeathListener(this), this);
+        pm.registerEvents(new PlayerJoinListener(this), this);
+        pm.registerEvents(new PlayerQuitListener(this), this);
+    }
 
-            if (!sender.hasPermission("ranksteal.admin")) {
-                sender.sendMessage("No permission");
-                return true;
-            }
+    private void registerCommands() {
+        Objects.requireNonNull(getCommand("rank")).setExecutor(new RankCommand(this));
+        Objects.requireNonNull(getCommand("topranks")).setExecutor(new TopRanksCommand(this));
+        Objects.requireNonNull(getCommand("setrank")).setExecutor(new SetRankCommand(this));
+        Objects.requireNonNull(getCommand("rankreload")).setExecutor(new RankReloadCommand(this));
+    }
 
-            if (args.length != 2) {
-                sender.sendMessage("/setrank <player> <rank>");
-                return true;
-            }
+    public void reload() {
+        reloadConfig();
+        scoreboardManager.reload();
+        tabManager.reload();
+    }
 
-            Player target = Bukkit.getPlayer(args[0]);
-            if (target == null) {
-                sender.sendMessage("Player not found");
-                return true;
-            }
+    public static RankStealPlugin getInstance() {
+        return instance;
+    }
 
-            int rank;
-            try {
-                rank = Integer.parseInt(args[1]);
-            } catch (Exception e) {
-                sender.sendMessage("Invalid number");
-                return true;
-            }
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
+    }
 
-            setRank(target.getUniqueId(), rank);
-            sender.sendMessage("Rank set!");
-            return true;
-        }
+    public RankManager getRankManager() {
+        return rankManager;
+    }
 
-        return false;
+    public ScoreboardManager getScoreboardManager() {
+        return scoreboardManager;
+    }
+
+    public TabManager getTabManager() {
+        return tabManager;
     }
 }
