@@ -26,26 +26,26 @@ public class RankManager {
     }
 
     public void loadPlayer(Player player) {
-        UUID uuid = player.getUniqueId();
-        db.getPlayerData(uuid).thenAccept(data -> {
-            if (data == null) {
-                registerNewPlayer(player);
-            } else {
-                data.setUsername(player.getName());
-                data.setLastSeen(System.currentTimeMillis());
-                cache.put(uuid, data);
-                db.savePlayerData(data);
-                plugin.getServer().getScheduler().runTask(plugin, () -> {
-    plugin.getScoreboardManager().show(player);
-    plugin.getTabManager().updatePlayer(player);
-    plugin.getTabManager().updateHeader(player);
-});
-        }).exceptionally(ex -> {
-            plugin.getLogger().log(Level.SEVERE, "Failed to load player " + player.getName(), ex);
-            return null;
-        });
-    }
-
+    UUID uuid = player.getUniqueId();
+    db.getPlayerData(uuid).thenAccept(data -> {
+        if (data == null) {
+            registerNewPlayer(player);
+        } else {
+            data.setUsername(player.getName());
+            data.setLastSeen(System.currentTimeMillis());
+            cache.put(uuid, data);
+            db.savePlayerData(data);
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                plugin.getScoreboardManager().show(player);
+                plugin.getTabManager().updatePlayer(player);
+                plugin.getTabManager().updateHeader(player);
+            });
+        }
+    }).exceptionally(ex -> {
+        plugin.getLogger().log(Level.SEVERE, "Failed to load player " + player.getName(), ex);
+        return null;
+    });
+}
     private void registerNewPlayer(Player player) {
         db.getNextRankNumber().thenAccept(nextRank -> {
             PlayerData data = new PlayerData(
