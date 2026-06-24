@@ -17,7 +17,7 @@ rank:
 
 scoreboard:
   enabled: true
-  title: "<gradient:#FFD700:#FF4500><bold>✦ RANK STEAL SMP ✦</bold></gradient>"
+  title: "<gradient:#FFD700:#FF4500><bold>✦ CROWN ALLIES SMP ✦</bold></gradient>"
   update-interval: 20  # ticks (20 = 1 second)
 
 tab:
@@ -58,4 +58,3 @@ messages:
   topranks-entry: "<gray>{pos}. <white>{player}</white> → <yellow>#{rank}</yellow> <dark_gray>({kills} kills)</dark_gray></gray>"
   topranks-footer: "<gray>━━━━━━━━━━━━━━━━━━━━</gray>"
   topranks-page: "<gray>Page {page}/{max_page} | /topranks {next}</gray>"
-
