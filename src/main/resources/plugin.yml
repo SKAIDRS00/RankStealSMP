@@ -7,7 +7,7 @@ commands:
   rank:
     description: Check rank
   setrank:
-    description: Set player rank
+    description: Set rank
     permission: ranksteal.admin
 
 permissions:
