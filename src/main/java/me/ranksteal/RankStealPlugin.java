@@ -35,7 +35,12 @@ public class RankStealPlugin extends JavaPlugin implements Listener {
         if (cmd.getName().equalsIgnoreCase("rank")) {
 
             if (args.length == 0) {
-                if (!(sender instanceof Player p)) return true;
+                if (!(sender instanceof Player)) {
+                    sender.sendMessage("Only players can use this");
+                    return true;
+                }
+
+                Player p = (Player) sender;
                 p.sendMessage("Your Rank: " + getRank(p.getUniqueId()));
                 return true;
             }
