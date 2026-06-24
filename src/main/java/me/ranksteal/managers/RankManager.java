@@ -35,11 +35,11 @@ public class RankManager {
                 data.setLastSeen(System.currentTimeMillis());
                 cache.put(uuid, data);
                 db.savePlayerData(data);
-                plugin.getScoreboardManager().show(player);
-                plugin.getTabManager().updatePlayer(player);
-                plugin.getServer().getScheduler().runTask(plugin, () ->
-                        plugin.getScoreboardManager().show(player));
-            }
+                plugin.getServer().getScheduler().runTask(plugin, () -> {
+    plugin.getScoreboardManager().show(player);
+    plugin.getTabManager().updatePlayer(player);
+    plugin.getTabManager().updateHeader(player);
+});
         }).exceptionally(ex -> {
             plugin.getLogger().log(Level.SEVERE, "Failed to load player " + player.getName(), ex);
             return null;
