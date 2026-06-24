@@ -105,3 +105,4 @@ public final class RankStealPlugin extends JavaPlugin {
         return tabManager;
     }
 }
+

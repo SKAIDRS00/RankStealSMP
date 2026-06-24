@@ -47,3 +47,4 @@ public class PlayerData {
         return "PlayerData{uuid=" + uuid + ", name=" + username + ", rank=#" + rankNumber + "}";
     }
 }
+

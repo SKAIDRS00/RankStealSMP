@@ -1,0 +1,16 @@
+me/ranksteal/managers/RankManager.class
+me/ranksteal/RankStealPlugin.class
+me/ranksteal/commands/TopRanksCommand.class
+me/ranksteal/database/DatabaseManager$SqlSupplier.class
+me/ranksteal/managers/TabManager.class
+me/ranksteal/listeners/PlayerJoinListener.class
+me/ranksteal/commands/RankReloadCommand.class
+me/ranksteal/models/PlayerData.class
+me/ranksteal/database/DatabaseManager.class
+me/ranksteal/api/RankStealAPI.class
+me/ranksteal/managers/ScoreboardManager.class
+me/ranksteal/commands/SetRankCommand.class
+me/ranksteal/listeners/PlayerQuitListener.class
+me/ranksteal/listeners/PlayerDeathListener.class
+me/ranksteal/commands/RankCommand.class
+me/ranksteal/engine/SwapEngine.class
